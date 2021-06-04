@@ -168,7 +168,10 @@ async function transferMilestones() {
   // Get a list of all milestones associated with this project
   let milestones = await gitlabApi.ProjectMilestones.all(
     settings.gitlab.projectId
-  );
+  ) as any[];
+
+  // filter active milestones
+  milestones = milestones.filter(milestone => milestone.state === "active")
 
   // sort milestones in ascending order of when they were created (by id)
   milestones = milestones.sort((a, b) => a.id - b.id);
@@ -262,6 +265,9 @@ async function transferIssues() {
     labels: settings.filterByLabel,
   }) as any[];
 
+  // filter issues to only get those in state 'opened'
+  issues = issues.filter(issue => issue.state === 'opened');
+
   // sort issues in ascending order of their issue number (by iid)
   issues = issues.sort((a, b) => a.iid - b.iid);
 
@@ -292,6 +298,8 @@ async function transferIssues() {
   //
   // Create GitHub issues for each GitLab issue
   //
+
+  console.log(`\nMigrating ${issues.length} open issues...`);
 
   // if a GitLab issue does not exist in GitHub repo, create it -- along with comments.
   for (let issue of issues) {
